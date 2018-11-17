@@ -1,4 +1,5 @@
 import paramiko
+import json
 
 
 def format_data(std_out, std_err):
@@ -7,20 +8,26 @@ def format_data(std_out, std_err):
     return r_std_out, r_std_err
 
 
-if __name__ == '__main__':
+def control_ssh(command):
+    with open('config.json', 'r') as f:
+        obj = json.load(f)
+
     with paramiko.SSHClient() as ssh:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        print("connecting...")
-        ssh.connect(hostname='192.168.0.27', port=22, username='pi', password='ricca170814')
+        print("connecting...\r\n")
+        ssh.connect(hostname=obj["ssh"]["ip"],
+                    port=obj["ssh"]["port"],
+                    username=obj["ssh"]["username"],
+                    password=obj["ssh"]["password"])
         print("connected!\r\n")
 
-        command = "source Downloads/mjpg-streamer/mjpg_streamer_end.sh"
         print("command : {0}\r\n".format(command))
 
         stdin, stdout, stderr = ssh.exec_command(command)
         result_stdout, result_stderr = format_data(stdout, stderr)
-        for line in result_stdout:
-            print(line)
 
-        for line in result_stderr:
-            print(line)
+        for out in result_stdout:
+            print(out)
+
+        for err in result_stderr:
+            print(err)
